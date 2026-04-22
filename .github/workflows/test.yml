@@ -1,0 +1,28 @@
+name: "Test"
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nixbuild/nix-quick-install-action@v35
+
+      - name: Generate hardware configuration
+        run: |
+          nix shell nixpkgs#nixos-install-tools -c nixos-generate-config --show-hardware-config > hardware-configuration.nix
+          git add hardware-configuration.nix
+
+      - name: Build NixOS configuration
+        run: nix build .#nixosConfigurations."nixos".config.system.build.toplevel
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nixbuild/nix-quick-install-action@v35
+
+      - name: Check formatting with nixfmt
+        run: nix run nixpkgs#nixfmt -- --check ./**/*.nix
