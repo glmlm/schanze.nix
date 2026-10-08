@@ -17,14 +17,7 @@
   };
 
   outputs =
-    {
-      home-manager,
-      nixpkgs,
-      nixpkgs-unstable,
-      firefox-addons,
-      neovim-config,
-      ...
-    }:
+    { home-manager, nixpkgs, ... }@inputs:
 
     let
       usr = import ./user.nix;
@@ -37,17 +30,18 @@
       config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreePkgs;
       overlays = [
         (_: _: {
-          unstable = import nixpkgs-unstable {
+          unstable = import inputs.nixpkgs-unstable {
             inherit system config;
           };
         })
-        firefox-addons.overlays.default
+        inputs.firefox-addons.overlays.default
       ];
       pkgs = import nixpkgs {
         inherit system config overlays;
       };
       extraSpecialArgs = {
-        inherit username neovim-config;
+        inherit username;
+        inherit (inputs) neovim-config;
       }
       // usr.extraArgs;
     in
